@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Reclamo Web</title><script src="/paginacorte/js/jquery.min.js?v=2.1.4"></script>
+<link rel="stylesheet" href="/paginacorte/dist/css/poncho.css">
+<link rel="stylesheet" href="/paginacorte/dist/css/roboto-fontface.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script language="JavaScript" type="text/javascript" src="/reclamosweb.nsf/FuncionesComunes?OpenJavascriptLibrary">
+</script>
+
+<script language="JavaScript" type="text/javascript">
+<!-- 
+
+function campoVacio(field)
+{
+	if ( (field.value==null) || (field.value=="") ){
+		return true
+	}else {
+		return false
+	}
+}
+
+function validarFormulario(){
+	f = document.forms[0]	
+	validar = '';
+
+	if(f.ident.value == ''){
+		validar = 'SI'
+//		mensaje = '2- Inresá el número de cliente que figura en tu factura.';	
+
+		document.getElementById("divCliente").className = "form-group has-feedback has-error";
+		document.getElementById("logoCliente").className += "glyphicon glyphicon-remove form-control-feedback";
+		document.getElementById('logoCliente').style.display = "";
+//		document.getElementById('labelCliente').innerHTML = mensaje;
+		document.getElementById("labelCliente").setAttribute("for", "ident");	
+	}else	if(document.getElementById('ident').value.length > 10){
+		validar = 'SI'
+		mensaje = '2- Ingresá un máximo de 10 dígitos.'	
+		
+		document.getElementById("divCliente").className = "form-group has-feedback has-error";
+		document.getElementById("logoCliente").className += "glyphicon glyphicon-remove form-control-feedback";
+		document.getElementById('logoCliente').style.display = "";
+		document.getElementById('labelCliente').innerHTML = mensaje;
+		document.getElementById("labelCliente").setAttribute("for", "ident");
+	}else{
+		document.getElementById("divCliente").className = "form-group has-feedback has-success";
+		document.getElementById('logoCliente').className = "glyphicon glyphicon-ok form-control-feedback";
+		document.getElementById('logoCliente').style.display = "";
+	}
+
+	if(f.medidor.value == '' || document.getElementById('medidor').value.length != 3){
+		validar = 'SI'
+		mensaje = '3- Ingresá los últimos 3 números de tu medidor';	
+		
+		document.getElementById("divMedidor").className = "form-group has-feedback has-error";
+		document.getElementById("logoMedidor").className += "glyphicon glyphicon-remove form-control-feedback";
+		document.getElementById('logoMedidor').style.display = "";
+		document.getElementById('labelMedidor').innerHTML = mensaje;
+		document.getElementById("labelMedidor").setAttribute("for", "ident");
+	}else{
+		document.getElementById("divMedidor").className = "form-group has-feedback has-success";
+		document.getElementById('logoMedidor').className = "glyphicon glyphicon-ok form-control-feedback";
+		document.getElementById('logoMedidor').style.display = "";
+	}
+	
+	if(validar == 'SI'){
+		return false
+	}	
+
+	f.Empresa.value = document.getElementById("empresa").options[document.getElementById("empresa").selectedIndex].text;
+	f.IDCliente.value = document.getElementById('ident').value			
+	f.MedidorW.value = document.getElementById('medidor').value	
+
+	document.getElementById("empresa").disabled = true;
+	document.getElementById("ident").disabled = true;
+	document.getElementById("medidor").disabled = true;	
+	document.getElementById("boton").className = "btn btn-info disabled";	
+	
+	f.Fin.value = ''
+	f.Errores.value = ''
+
+	ClickearLink('borrar')
+}
+
+function validarForm()
+{
+	f = document.forms[0];
+
+
+/* VALIDAR CAMPO VACIO*/
+		if (campoVacio(f.Empresa)){ 
+			f.Errores.value =  'Debe completar la Empresa.';
+			window.location.reload();
+			f.Empresa.focus();
+			return false
+		}
+
+		if (document.forms[0].Errores.value.toUpperCase() != 'EDESUR' && document.forms[0].Errores.value.toUpperCase() !=  'EDENOR'){ 
+			alert('La empresa ingresada es incorrecta.');
+			f.Empresa.focus();
+			return false
+		}			
+}
+	
+// -->
+</script>
+
+<script language="JavaScript" type="text/javascript">
+<!-- 
+document._domino_target = "_self";
+function _doClick(v, o, t, h) {
+  var form = document._Reclamo;
+  if (form.onsubmit) {
+     var retVal = form.onsubmit();
+     if (typeof retVal == "boolean" && retVal == false)
+       return false;
+  }
+  var target = document._domino_target;
+  if (o.href != null) {
+    if (o.target != null)
+       target = o.target;
+  } else {
+    if (t != null)
+      target = t;
+  }
+  form.target = target;
+  form.__Click.value = v;
+  if (h != null)
+    form.action += h;
+  form.submit();
+  return false;
+}
+// -->
+</script>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" onload="f = document.forms[0]	
+
+if(f.Fin.value != '' || f.Errores.value != ''){
+	document.getElementById(&quot;empresa&quot;).disabled = false;
+	document.getElementById(&quot;ident&quot;).disabled = false;
+	document.getElementById(&quot;medidor&quot;).disabled = false;
+	document.getElementById(&quot;boton&quot;).className = &quot;btn btn-primary&quot;;		
+}">
+
+<form method="post" action="/reclamosweb.nsf/Reclamo?OpenForm&amp;Seq=3" name="_Reclamo">
+<input type="hidden" name="__Click" value="0"><a href="" onclick="return _doClick('8325752000514A90.c0e15788bd73314603258247006adc9a/$Body/0.70', this, null)" id="borrar" name="borrar"> </a> <style>
+body{
+   background-color: #f9f9f9;
+}
+</style><font face="Consolas"><br>
+</font><div class="container"><div class="alert alert-danger">	
+		<center><h4>Ud. ya tiene un reclamo ingresado, hace menos de 3 horas</h4></center>
+</div>
+<div class="no-imprimible">
+<div class="form-group has-feedback" id="div-tipo-norma">
+	<label class="control-label" for="empresa">1- Seleccioná tu empresa proveedora de energía eléctrica<label class="text-primary"></label></label>
+	<select name="empresa" class="form-control" id="empresa">
+		<option value="0">EDENOR</option>
+		<option value="1">EDESUR</option>		
+	</select>
+	<span id="tipo-norma-span"></span>
+</div>
+<div id="divCliente" class="form-group has-feedback">
+	<label id="labelCliente" class="control-label" for="ident">2- Ingresá el número de cliente que figura en tu factura:</label>  
+	<input class="form-control" type="text" id="ident" placeholder="Número" name="ident" onkeypress='return event.charCode >= 48 		&& event.charCode <= 57'>  
+	<span id="logoCliente" class="glyphicon glyphicon-remove form-control-feedback" style="display:none"></span>
+</div>
+<div id="divMedidor" class="form-group has-feedback">
+	<label id="labelMedidor" class="control-label" for="medidor">3- Ingresá los últimos 3 números del medidor que figuran en tu factura:</label>  
+	<input class="form-control" type="text" id="medidor" placeholder="Medidor" name="medidor" onkeypress='return event.charCode >= 	48 		&& event.charCode <= 57'>  
+	<span id="logoMedidor" class="glyphicon glyphicon-remove form-control-feedback" style="display:none"></span>
+</div>
+<br>
+<button id = "boton" type="button"  class="btn btn-primary " onclick="validarFormulario()">Enviar Reclamo</button>  
+<br>
+</div>
+<p>
+<input name="ErroresCampo" type="hidden" value="">
+<input name="Medidor" type="hidden" value="999999">
+<input name="Empresa" type="hidden" value="EDESUR">
+<input name="IDCliente" type="hidden" value="00666666">
+<input name="MedidorW" type="hidden" value="999">
+<input name="NRecWeb" type="hidden" value="">
+<input name="Mas" type="hidden" value="no">
+<input name="ID" type="hidden" value="DFBAB062214A223A03258AD00070D3EE">
+<input name="Errores" type="hidden" value="Ud. ya tiene un reclamo ingresado, hace menos de 3 horas">
+<input name="Fin" type="hidden" value="">
+<input name="Procesado" type="hidden" value="">
+<input name="Fecha" type="hidden" value="02/27/2024">
+<input name="HTTP_COOKIE" type="hidden" value="">
+<input name="HTTP_REFERER" type="hidden" value="">
+<input name="HTTP_USER_AGENT" type="hidden" value="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0">
+<input name="PATH_INFO" type="hidden" value="/reclamosweb.nsf/Reclamo?OpenForm">
+<input name="REMOTE_ADDR" type="hidden" value="198.0.0.0">
+<input name="REMOTE_USER" type="hidden" value="">
+<input name="Explorador" type="hidden" value="Netscape"></form>
+</body>
+</html>

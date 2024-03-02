@@ -1,0 +1,3 @@
+name: enre.infrastructure
+runtime: dotnet
+description: LAMBDA para hacer un reclamo al ENRE
