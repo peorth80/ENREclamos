@@ -16,7 +16,7 @@ namespace ENREclamos.Tests;
 
 public class FunctionTest
 {
-    private const string AWS_PROFILE = "yourawsprofile";
+    private const string AWS_PROFILE = "mi-profile";
     private Mock<HttpMessageHandler> OK_Handler = new();
     private Mock<HttpMessageHandler> Fail_Handler = new();
 
@@ -62,8 +62,8 @@ public class FunctionTest
 
     private static void SetEnvVariables()
     {
-        Environment.SetEnvironmentVariable("BUCKET_RECLAMOS", "reclamos-html-dev");
-        Environment.SetEnvironmentVariable("TABLA_RECLAMOS", "Reclamo-Enre-Html-adb4538");
+        Environment.SetEnvironmentVariable("BUCKET_RECLAMOS", "bucket-reclamos-html");
+        Environment.SetEnvironmentVariable("TABLA_RECLAMOS", "tabla-dynamo-reclamo-enre");
         Environment.SetEnvironmentVariable("DRY_RUN", "true");
         Environment.SetEnvironmentVariable("AWS_PROFILE", AWS_PROFILE);
         
@@ -141,6 +141,9 @@ public class FunctionTest
     {
         /*
          This will perform a real call -- use at your own risk
+         
+        Environment.SetEnvironmentVariable("DRY_RUN", "true");
+        
         var httpClientFactory = new RealClientFactory();
         var context = new TestLambdaContext();
         var functions = new Functions(httpClientFactory, 

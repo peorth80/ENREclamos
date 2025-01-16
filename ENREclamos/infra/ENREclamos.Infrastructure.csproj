@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RootNamespace>ENREclamos.Infrastructure </RootNamespace>
+    <UserSecretsId>07f9fa93-7b1f-43d8-ad5b-f9f5ecc53fe2</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

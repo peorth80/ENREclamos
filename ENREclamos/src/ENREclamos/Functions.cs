@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -232,7 +233,9 @@ public class Functions
             var item = new Dictionary<string, AttributeValue>()
             {
                 { "Id", new AttributeValue() { S = numeroReclamo } },
-                { "Fecha", new AttributeValue() { S = DateTime.Now.ToString("u") } },
+                { "Fecha", new AttributeValue() { S = ConvertToArgentinaTime(DateTime.UtcNow.ToString("s")) } },
+                { "FechaUTC", new AttributeValue() { S = DateTime.UtcNow.ToString("s") } },
+                { "Procesado", new AttributeValue() { N = "1"} },
                 { "DryRun", new AttributeValue() { BOOL = _dryRun }}
             };
             
@@ -262,5 +265,15 @@ public class Functions
         var match = regex.Match(message);
 
         return match.Success ? message : "";
-    }    
+    }
+    
+    private string ConvertToArgentinaTime(string value)
+    {
+        var utcDateTime = DateTime.Parse(value, null, DateTimeStyles.RoundtripKind);
+        var argentinaTimeZone = TimeZoneInfo.CreateCustomTimeZone("GMT-3", TimeSpan.FromHours(-3), "GMT-3", "GMT-3");
+        DateTime argentinaDateTime = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, argentinaTimeZone);
+
+        return argentinaDateTime.ToString("f");
+    }
 }
+

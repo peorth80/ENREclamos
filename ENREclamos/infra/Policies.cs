@@ -1,8 +1,12 @@
+using System;
+using Pulumi;
+using Pulumi.Aws.Iam;
+
 namespace ENREclamos.Infrastructure;
 
 public class Policies
 {
-	internal static string readPolicyForReclamosTable(string dynamodbTable)
+	internal static string ReadPolicyForReclamosTable(string dynamodbTable)
 	{
 		var policyText = $@"{{{{
 			""Version"": ""2012-10-17"",
@@ -11,11 +15,12 @@ public class Policies
 				""Action"": [
 					""dynamodb:DescribeTable"",
 					""dynamodb:Scan"",
+					""dynamodb:Query"",
 					""dynamodb:UpdateItem"",
 					""dynamodb:PutItem"",
 					""dynamodb:BatchWriteItem""
 				],
-				""Resource"": ""{dynamodbTable}""
+				""Resource"": [""{dynamodbTable}"", ""{dynamodbTable}/index/FechaOrdenada""]
 			}}}}]
 		}}}}";
 
@@ -23,8 +28,9 @@ public class Policies
 
 		return parsedText;
 	}
+	
 
-	internal static string readAsumePolicyForLambda()
+	internal static string ReadAsumePolicyForLambda()
 	{
 		var policyText = @"{
 			""Version"": ""2012-10-17"",
@@ -42,8 +48,35 @@ public class Policies
 
 		return policyText;
 	}
+	
+	internal static string ReadPassRolePolicyForLambda(string roleArn)
+	{
+		var policyDocument = new
+		{
+			Version = "2012-10-17",
+			Statement = new[]
+			{
+				new
+				{
+					Action = new[]
+					{
+						"iam:PassRole"
+					},
+					Effect = "Allow",
+					Resource = new[]
+					{
+						roleArn
+					} 
+				}
+			}
+		};
+		
+		var policyText = System.Text.Json.JsonSerializer.Serialize(policyDocument);
+		
+		return policyText;
+	}
 
-	internal static string readAsumePolicyForSchedule()
+	internal static string ReadAsumePolicyForSchedule()
 	{
 		var policyText = @"{
 					""Version"": ""2012-10-17"",
@@ -62,7 +95,7 @@ public class Policies
 		return policyText;
 	}
 
-	internal static string readPolicyForSchedule(string functionName)
+	internal static string ReadPolicyForSchedule(string functionName)
 	{
 		var current = Pulumi.Aws.GetCallerIdentity.InvokeAsync();
 
@@ -90,7 +123,7 @@ public class Policies
 		return parsedText;
 	}
 
-	internal static string readPolicyForCloudwatch()
+	internal static string ReadPolicyForCloudwatch()
 	{
 		var policyText = @"{
 			""Version"": ""2012-10-17"",
@@ -107,8 +140,31 @@ public class Policies
 
 		return policyText;
 	}
+	
+	/// <summary>
+	/// If your schedule name is daily-task, the group is default, and it's in the us-east-1 region with an account ID of 123456789012, the ARN would look like this:
+	/// arn:aws:scheduler:us-east-1:123456789012:schedule/default/daily-task
+	/// </summary>
+	/// <param name="scheduleArn"></param>
+	/// <returns></returns>
+	internal static string ReadPolicyForSchedulerUpdates(string scheduleArn)
+	{
+		var policyText = $@"{{
+			""Version"": ""2012-10-17"",
+			""Statement"": [{{
+				""Effect"": ""Allow"",
+				""Action"": [
+					""scheduler:GetSchedule"",
+					""scheduler:UpdateSchedule""
+				],
+				""Resource"": [""{scheduleArn}"", ""{scheduleArn}/*""]
+			}}]
+		}}";
 
-	internal static string readPolicyForS3Bucket(string bucketName)
+		return policyText;
+	}
+
+	internal static string ReadPolicyForS3Bucket(string bucketName)
 	{
 		var policyText = $@"{{
 			""Version"": ""2012-10-17"",

@@ -1,7 +1,8 @@
 config:
   aws:region: us-east-1
-  aws:profile: yourawsprofile
+  aws:profile: mi-profile
   enre:numerocliente: "123456"
   enre:numeromedidor: "654323"
   enre:scheduledtatus: "DISABLED"
   enre:dryrun: "true"
+  enre:codigovalidacion: "00000000-0000-0000-0000-000000000000"
