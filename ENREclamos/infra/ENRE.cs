@@ -23,7 +23,6 @@ class ENREStack : Stack
 	
 	public ENREStack()
 	{
-
 		var STACK_NAME = Deployment.Instance.StackName;
 
 		var reclamosBucket = new Bucket(
@@ -48,8 +47,13 @@ class ENREStack : Stack
 					},
 					new TableAttributeArgs
 					{
-						Name = "Fecha",
+						Name = "FechaUTC",
 						Type = "S",
+					},
+					new TableAttributeArgs
+					{
+						Name = "Procesado",
+						Type = "N",
 					},
 				},
 				BillingMode = "PROVISIONED",
@@ -60,8 +64,9 @@ class ENREStack : Stack
 				{
 					new TableGlobalSecondaryIndexArgs
 					{
-						Name = "FechaIndex",
-						HashKey = "Fecha",
+						Name = "FechaOrdenada",
+						HashKey = "Procesado",	//Que hack horrible para traer los ultimos 10 registros, dios mio
+						RangeKey = "FechaUTC",
 						ProjectionType = "ALL",
 						ReadCapacity = 1,
 						WriteCapacity = 1
@@ -110,38 +115,10 @@ class ENREStack : Stack
 		});
 		LambdaReclamo = lambdaReclamo.Arn;
 		
-		
-		var envHTTPFunction = new FunctionEnvironmentArgs()
-		{
-			Variables = new InputMap<string>() {
-				{"TABLA_RECLAMOS", reclamosTable.Name},
-			}
-		};
-		
-		var lambdaHttpFunction = new Function("ENREclamos-HTTPFunction", new FunctionArgs
-		{
-			Name = "ENREclamos-HTTPFunction",
-			Runtime = "dotnet6",
-			Code = new FileArchive("../src/ENREclamos.LambdaHTTPFunction/output.zip"),
-			Handler = "ENREclamos.LambdaHTTPFunction",
-			Role = lambdaRole.Apply(x => x.Arn),
-			Environment = envHTTPFunction,
-			Description = "HTTP Function LAMBDA para ver la lista de reclamos",
-			Timeout = 20
-		});
-
-		var lambdaFunctionUrl = new FunctionUrl("testLatest", new()
-		{
-			FunctionName = lambdaHttpFunction.Name,
-			AuthorizationType = "NONE",
-		});
-
-		LambdaReclamoHttpFunction = lambdaFunctionUrl.FunctionUrlResult;
-
 		#region Schedule
 		var schedulerRole = lambdaReclamo.Name.Apply(x => CreateSchedulerRole(x));
 
-		string startDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:sszzz");
+		//string startDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:sszzz");
 
 		var scheduleGroup = new Aws.Scheduler.ScheduleGroup("enre");
 
@@ -160,13 +137,53 @@ class ENREStack : Stack
 				RoleArn = schedulerRole.Apply(x => x.Arn),
 			},
 			ScheduleExpressionTimezone = "America/Buenos_Aires",
-			StartDate = startDate,
+			//StartDate = startDate,
 			Description = "Scheduled Job para mandar un reclamo al ENRE cada 4 horas",
 			State = EnreConfig.ScheduleStatus
 		});
 
 		Schedule = schedule.Arn;
+		#endregion		
+		
+		#region Function URL
+		var lambdaHttpFunctionRole = Output.Tuple(DynamodDBReclamosTable, Schedule, schedulerRole)
+			.Apply(names =>
+			{
+				var dynamoDbTableName = names.Item1;
+				var bucketName = names.Item2;
+				var scheduleRoleArn = names.Item3.Arn;
+				return CreateLambdaHttpFunctionRolePolicies(dynamoDbTableName, bucketName, scheduleRoleArn);
+			});
+		
+		var envHTTPFunction = new FunctionEnvironmentArgs()
+		{
+			Variables = new InputMap<string>() {
+				{"TABLA_RECLAMOS", reclamosTable.Name},
+				{"CODIGO_VALIDACION", EnreConfig.CodigoValidacion},
+				{"SCHEDULE_ARN", Schedule}
+			}
+		};
+		
+		var lambdaHttpFunction = new Function("ENREclamos-HTTPFunction", new FunctionArgs
+		{
+			Name = "ENREclamos-HTTPFunction",
+			Runtime = "dotnet6",
+			Code = new FileArchive("../src/ENREclamos.LambdaHTTPFunction/output.zip"),
+			Handler = "ENREclamos.LambdaHTTPFunction",
+			Role = lambdaHttpFunctionRole.Apply(x => x.Arn),
+			Environment = envHTTPFunction,
+			Description = "HTTP Function LAMBDA para ver la lista de reclamos y prender y apagar el schedule",
+			Timeout = 20,
+		});
+		
+		var lambdaFunctionUrl = new FunctionUrl("testLatest", new()
+		{
+			FunctionName = lambdaHttpFunction.Name,
+			AuthorizationType = "NONE",
+		});
 
+		LambdaReclamoHttpFunction = lambdaFunctionUrl.FunctionUrlResult;
+		
 		#endregion
 	}
 	
@@ -174,19 +191,19 @@ class ENREStack : Stack
 	{
 		var schedulerRole = new Role("schedulerRole", new RoleArgs
 		{
-			AssumeRolePolicy = Policies.readAsumePolicyForSchedule()
+			AssumeRolePolicy = Policies.ReadAsumePolicyForSchedule()
 		});
 
 		var schedulePolicy = new RolePolicy("schedulerRolePolicy", new RolePolicyArgs
 		{
 			Role = schedulerRole.Id,
-			Policy = Policies.readPolicyForSchedule(functionName)
+			Policy = Policies.ReadPolicyForSchedule(functionName)
 		});
 		
 		var logPolicy = new RolePolicy("cloudwatchPolicy", new RolePolicyArgs
 		{
 			Role = schedulerRole.Id,
-			Policy = Policies.readPolicyForCloudwatch()
+			Policy = Policies.ReadPolicyForCloudwatch()
 		});
 
 		return schedulerRole;
@@ -196,28 +213,62 @@ class ENREStack : Stack
 	{
 		var lambdaRole = new Role("lambdaRole", new RoleArgs
 		{
-			AssumeRolePolicy = Policies.readAsumePolicyForLambda()
+			AssumeRolePolicy = Policies.ReadAsumePolicyForLambda()
 		});
 
 		var logPolicy = new RolePolicy("lambdaLogPolicy", new RolePolicyArgs
 		{
 			Role = lambdaRole.Id,
-			Policy = Policies.readPolicyForCloudwatch()
+			Policy = Policies.ReadPolicyForCloudwatch()
 		});
 
 		var dynamodbPolicyRole = new RolePolicy("dynamoDbPolicy", new RolePolicyArgs
 		{
 			Role = lambdaRole.Id,
-			Policy = Policies.readPolicyForReclamosTable(dynamodbTable)
+			Policy = Policies.ReadPolicyForReclamosTable(dynamodbTable)
 		});
 
 		var s3BucketPolicy = new RolePolicy("s3Policy", new RolePolicyArgs
 		{
 			Role = lambdaRole.Id,
-			Policy = Policies.readPolicyForS3Bucket(s3Bucket)
+			Policy = Policies.ReadPolicyForS3Bucket(s3Bucket)
 		});
 
 		return lambdaRole;
 	}
+	
+	
+	private static Role CreateLambdaHttpFunctionRolePolicies(string dynamodbTable, string scheduleArn, Output<string> scheduleRoleArn)
+	{
+		var lambdaRole = new Role("lambdaHTTPFunctionRole", new RoleArgs
+		{
+			AssumeRolePolicy = Policies.ReadAsumePolicyForLambda()
+		});
 
+		var iamRole = new RolePolicy("lambdaHTTPFunctionPassRole", new RolePolicyArgs
+		{
+			Role = lambdaRole.Id,
+			Policy = scheduleRoleArn.Apply(role => Policies.ReadPassRolePolicyForLambda(role)) 
+		});
+		
+		var logPolicy = new RolePolicy("lambdaHTTPFunctionPolicy", new RolePolicyArgs
+		{
+			Role = lambdaRole.Id,
+			Policy = Policies.ReadPolicyForCloudwatch()
+		});
+
+		var dynamodbPolicyRole = new RolePolicy("dynamoDbHTTPFunctionPolicy", new RolePolicyArgs
+		{
+			Role = lambdaRole.Id,
+			Policy = Policies.ReadPolicyForReclamosTable(dynamodbTable)
+		});
+		
+		var schedulePolicyRole = new RolePolicy("scheduleHTTPFunctionPolicy", new RolePolicyArgs
+        {
+        	Role = lambdaRole.Id,
+        	Policy = Policies.ReadPolicyForSchedulerUpdates(scheduleArn)
+        });
+
+		return lambdaRole;
+	}
 }

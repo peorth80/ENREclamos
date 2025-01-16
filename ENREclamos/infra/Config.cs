@@ -8,6 +8,8 @@ public class Config
     
     public string NumeroMedidor => _config.Require("numeromedidor");
     
+    public string CodigoValidacion => _config.Require("codigovalidacion");
+    
     public string DryRun => _config.Require("dryrun");
 
     private Pulumi.Config _config;

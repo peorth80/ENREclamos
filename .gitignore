@@ -354,3 +354,5 @@ MigrationBackup/
 
 .idea/
 *.zip
+
+Pulumi.prod.yml
