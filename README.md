@@ -13,11 +13,13 @@ Este es el lambda que se llama desde EventBridge. Tiene un modo `dry_run` para p
 
 ### Lambda 2: Ver reclamos
 Desde el HTTP Function, con `http://[endpoint]/list` podemos ver un JSON con la lista de los reclamos, en que fecha se hicieron, y si fueron hechos en `DryRun` mode o no
+El scheduler tambien se puede arrancar `http://[endpoint]/start/<guid>` o detener `http://[endpoint]/stop/<guid>`. Guid es un Guid de control que se define en Pulumi, un layer de seguridad para pobres.
 
 ## Como instalarlo
 `infra` crea toda la infraestructura necesaria. 
 
 1. Configurar la cuenta de AWS, poner el perfil que corresponda en el `pulumi.dev.yml`, configurar nro medidor, nro cliente, etc.
+2. Compilar las apps (correr `./build.sh` en los proyectos que estan en `src`)
 2. `pulumi up`
 3. Una vez que termina de crear todo, revisar como quedo en AWS. Va a crear:
 - 1 bucket
@@ -27,6 +29,7 @@ Desde el HTTP Function, con `http://[endpoint]/list` podemos ver un JSON con la 
 - Logs de Cloudwatch
 - Roles y permisos
 4. Se puede ir a Lambda functions -> Test y poner `{}` como Event message. Recuerden ponerlo en `dry_run` si quieren probarlo, para no pegarle al site real
+5. La function URL se puede probar con `http://[endpoint]/list`
 
 ## Tests
 Los tests son pobres y estan hechos asi nomas. Para lo que lo necesitaba era suficiente

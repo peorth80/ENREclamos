@@ -1,4 +1,3 @@
-using System.Globalization;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -23,6 +22,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 builder.Services.AddDefaultAWSOptions(configurationRoot.GetAWSOptions());
 builder.Services.AddAWSService<IAmazonDynamoDB>();
+builder.Services.AddLogging();
+
+builder.Logging.AddConsole();
 
 var app = builder.Build();
 
@@ -30,7 +32,7 @@ app.UseHttpsRedirection();
 
 app.MapGet("/", () => "ENREClamos 0.1.1");
 
-app.MapGet("/start/{code:guid}", async (Guid code, IConfiguration configuration) =>
+app.MapGet("/start/{code:guid}", async (Guid code, IConfiguration configuration, ILogger<Program> logger) =>
 {
     var codigoValidacion = configuration.GetValue<string>("CODIGO_VALIDACION");
     if (codigoValidacion != code.ToString()) return Results.Unauthorized();
@@ -40,16 +42,19 @@ app.MapGet("/start/{code:guid}", async (Guid code, IConfiguration configuration)
     try
     {
         var results = await ChangeStatus(scheduleInfo, true);
-
+        logger.Log(LogLevel.Information, results.Message);
+        
         return results.Success ? Results.Ok(results.Message) : Results.Conflict(results.Message);
     }
     catch (Exception ex)
     {
-        return Results.Problem($"Error actualizando el schedule: {ex.Message}");
+        var message = $"Error actualizando el schedule: {ex.Message}";
+        logger.Log(LogLevel.Error, message);
+        return Results.Problem(message);
     }
 });
 
-app.MapGet("/stop/{code:guid}", async (Guid code, IConfiguration configuration) =>
+app.MapGet("/stop/{code:guid}", async (Guid code, IConfiguration configuration, ILogger<Program> logger) =>
 {
     var codigoValidacion = configuration.GetValue<string>("CODIGO_VALIDACION");
     if (codigoValidacion != code.ToString()) return Results.Unauthorized();
@@ -59,12 +64,15 @@ app.MapGet("/stop/{code:guid}", async (Guid code, IConfiguration configuration) 
     try
     {
         var results = await ChangeStatus(scheduleInfo, false);
-
+        logger.Log(LogLevel.Information, results.Message);
+        
         return results.Success ? Results.Ok(results.Message) : Results.Conflict(results.Message);
     }
     catch (Exception ex)
     {
-        return Results.Problem($"Error actualizando el schedule: {ex.Message}");
+        var message = $"Error actualizando el schedule: {ex.Message}";
+        logger.Log(LogLevel.Error, message);
+        return Results.Problem(message);
     }
 });
 
