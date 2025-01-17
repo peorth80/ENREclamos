@@ -20,16 +20,16 @@ El scheduler tambien se puede arrancar `http://[endpoint]/start/<guid>` o detene
 
 1. Configurar la cuenta de AWS, poner el perfil que corresponda en el `pulumi.dev.yml`, configurar nro medidor, nro cliente, etc.
 2. Compilar las apps (correr `./build.sh` en los proyectos que estan en `src`)
-2. `pulumi up`
-3. Una vez que termina de crear todo, revisar como quedo en AWS. Va a crear:
+3. `pulumi up`
+4. Una vez que termina de crear todo, revisar como quedo en AWS. Va a crear:
 - 1 bucket
 - 1 tabla de dynamo
 - 1 Schedule en Eventbride
 - 2 functiones lambda (1 de ellas con function URL)
 - Logs de Cloudwatch
 - Roles y permisos
-4. Se puede ir a Lambda functions -> Test y poner `{}` como Event message. Recuerden ponerlo en `dry_run` si quieren probarlo, para no pegarle al site real
-5. La function URL se puede probar con `http://[endpoint]/list`
+5. Se puede ir a Lambda functions -> Test y poner `{}` como Event message. Recuerden ponerlo en `dry_run` si quieren probarlo, para no pegarle al site real
+6. La function URL se puede probar con `http://[endpoint]/list`
 
 ## Tests
 Los tests son pobres y estan hechos asi nomas. Para lo que lo necesitaba era suficiente
