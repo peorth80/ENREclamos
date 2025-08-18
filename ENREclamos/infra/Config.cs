@@ -6,6 +6,8 @@ public class Config
     
     public string NumeroCliente => _config.Require("numerocliente");
     
+    public string Nombre => _config.Require("nombre");
+    
     public string NumeroMedidor => _config.Require("numeromedidor");
     
     public string CodigoValidacion => _config.Require("codigovalidacion");
