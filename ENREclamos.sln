@@ -8,6 +8,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ENREclamos", "ENREclamos\sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ENREclamos.LambdaHTTPFunction", "ENREclamos\src\ENREclamos.LambdaHTTPFunction\ENREclamos.LambdaHTTPFunction.csproj", "{0503C14E-E73D-45BE-A20A-C1F6C586CA34}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{AA4362AB-9E95-4545-8464-BF45046131A8}"
+	ProjectSection(SolutionItems) = preProject
+		ENREclamos\scripts\build-all.sh = ENREclamos\scripts\build-all.sh
+		ENREclamos\scripts\build-httpfunction.sh = ENREclamos\scripts\build-httpfunction.sh
+		ENREclamos\scripts\build-lamba.sh = ENREclamos\scripts\build-lamba.sh
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

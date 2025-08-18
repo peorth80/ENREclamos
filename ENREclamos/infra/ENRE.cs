@@ -78,6 +78,7 @@ class ENREStack : Stack
 		////// CONFIG //////
 		var EnreConfig = new Config();
 
+		Log.Info("Nombre:" + EnreConfig.Nombre);
 		Log.Info("Numero cliente y medidor:" + EnreConfig.NumeroCliente + " / " + EnreConfig.NumeroMedidor);
 
 		DynamodDBReclamosTable = reclamosTable.Arn;
@@ -104,13 +105,13 @@ class ENREStack : Stack
 
 		var lambdaReclamo = new Function("ENREclamos", new FunctionArgs
 		{
-			Name = "ENREclamos",
+			Name = $"ENREclamos-{EnreConfig.Nombre}",
 			Runtime = "dotnet6",
 			Code = new FileArchive("../src/ENREclamos/output.zip"),
 			Handler = "ENREclamos::ENREclamos.Functions::Get",
 			Role = lambdaRole.Apply(x => x.Arn),
 			Environment = envHTMLTable,
-			Description = "LAMBDA que envia un reclamo al ENRE",
+			Description = $"LAMBDA que envia un reclamo al ENRE para la cuenta {EnreConfig.Nombre}",
 			Timeout = 20
 		});
 		LambdaReclamo = lambdaReclamo.Arn;
@@ -138,7 +139,7 @@ class ENREStack : Stack
 			},
 			ScheduleExpressionTimezone = "America/Buenos_Aires",
 			//StartDate = startDate,
-			Description = "Scheduled Job para mandar un reclamo al ENRE cada 4 horas",
+			Description = $"Scheduled Job para mandar un reclamo al ENRE cada 4 horas para el medidor {EnreConfig.Nombre}",
 			State = EnreConfig.ScheduleStatus
 		});
 
@@ -166,13 +167,13 @@ class ENREStack : Stack
 		
 		var lambdaHttpFunction = new Function("ENREclamos-HTTPFunction", new FunctionArgs
 		{
-			Name = "ENREclamos-HTTPFunction",
+			Name = $"ENREclamos-{EnreConfig.Nombre}-HTTPFunction",
 			Runtime = "dotnet6",
 			Code = new FileArchive("../src/ENREclamos.LambdaHTTPFunction/output.zip"),
 			Handler = "ENREclamos.LambdaHTTPFunction",
 			Role = lambdaHttpFunctionRole.Apply(x => x.Arn),
 			Environment = envHTTPFunction,
-			Description = "HTTP Function LAMBDA para ver la lista de reclamos y prender y apagar el schedule",
+			Description = $"HTTP Function LAMBDA para ver la lista de reclamos y prender y apagar el schedule para la cuenta {EnreConfig.Nombre}",
 			Timeout = 20,
 		});
 		

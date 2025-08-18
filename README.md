@@ -18,9 +18,9 @@ El scheduler tambien se puede arrancar `http://[endpoint]/start/<guid>` o detene
 ## Como instalarlo
 `infra` crea toda la infraestructura necesaria. 
 
-1. Configurar la cuenta de AWS, poner el perfil que corresponda en el `pulumi.dev.yml`, configurar nro medidor, nro cliente, etc.
-2. Compilar las apps (correr `./build.sh` en los proyectos que estan en `src`)
-3. `pulumi up`
+1. Configurar la cuenta de AWS, poner el perfil que corresponda en el `pulumi.dev.yml`, configurar nro. medidor, nro. cliente, etc.
+2. Compilar las apps (correr `./build.sh` en los proyectos que estan en `src` o el `./build-all.sh`)
+3. `pulumi up --stack dev`
 4. Una vez que termina de crear todo, revisar como quedo en AWS. Va a crear:
 - 1 bucket
 - 1 tabla de dynamo
@@ -39,3 +39,13 @@ Si tenes ganas, manda, para lo que lo necesitaba me sirve.
 
 ## Soporta otra cosa que el ENRE?
 Si tu empresa de energia tiene una pagina que podes mandar los reclamos, podes adaptarlo a lo que necesites. 
+
+## Soporta mas de un numero de cliente?
+Si queres manejar otro numero de cliente (por ej., uno por tu medidor y otro por tu edificio), simplemente hacer un nuevo stack y configura los settings
+1. `pulumi stack`
+2. Create a new stack
+3. Ponele el nombre que quieras (`edificio` por ej.)
+4. Configura los valores en el `pulumi.edificio.yaml`
+5. `pulumi up --stack edificio`
+
+De esta forma podes tener 2 "bots" corriendo bajo la misma cuenta, no pisan los recursos.
