@@ -12,9 +12,6 @@ namespace ENREclamos.Infrastructure;
 
 class ENREStack : Stack
 {
-	private const string DEV = "dev";
-	private const string PROD = "prod";
-
 	[Output] public Output<string> DynamodDBReclamosTable { get; set; }
 	[Output] public Output<string> S3Bucket { get; set; }
 	[Output] public Output<string> LambdaReclamo { get; set; }
@@ -24,7 +21,13 @@ class ENREStack : Stack
 	public ENREStack()
 	{
 		var STACK_NAME = Deployment.Instance.StackName;
+		
+		////// CONFIG //////
+		var enreConfig = new Config();
 
+		Log.Info("Nombre:" + enreConfig.Nombre);
+		Log.Info("Numero cliente y medidor:" + enreConfig.NumeroCliente + " / " + enreConfig.NumeroMedidor);
+		
 		var reclamosBucket = new Bucket(
 			"reclamo-enre-html", new BucketArgs()
 			{
@@ -38,6 +41,7 @@ class ENREStack : Stack
 			"reclamo-enre",
 			new Aws.DynamoDB.TableArgs()
 			{
+				Name = $"reclamo-enre-{STACK_NAME}",
 				Attributes = new[]
 				{
 					new TableAttributeArgs
@@ -74,13 +78,7 @@ class ENREStack : Stack
 				} 
 			}
 		);
-
-		////// CONFIG //////
-		var EnreConfig = new Config();
-
-		Log.Info("Nombre:" + EnreConfig.Nombre);
-		Log.Info("Numero cliente y medidor:" + EnreConfig.NumeroCliente + " / " + EnreConfig.NumeroMedidor);
-
+		
 		DynamodDBReclamosTable = reclamosTable.Arn;
 		
 		var lambdaRole = Output.Tuple(DynamodDBReclamosTable, S3Bucket)
@@ -97,21 +95,21 @@ class ENREStack : Stack
 				{"TABLA_RECLAMOS", reclamosTable.Name},
 				{"BUCKET_RECLAMOS", reclamosBucket.BucketName},
 				{"DISTRIBUIDORA", "EDESUR"},
-				{"NRO_CLIENTE", EnreConfig.NumeroCliente},
-				{"NRO_MEDIDOR", EnreConfig.NumeroMedidor},
-				{"DRY_RUN", EnreConfig.DryRun}
+				{"NRO_CLIENTE", enreConfig.NumeroCliente},
+				{"NRO_MEDIDOR", enreConfig.NumeroMedidor},
+				{"DRY_RUN", enreConfig.DryRun}
 			}
 		};
 
 		var lambdaReclamo = new Function("ENREclamos", new FunctionArgs
 		{
-			Name = $"ENREclamos-{EnreConfig.Nombre}",
+			Name = $"ENREclamos-{enreConfig.Nombre}",
 			Runtime = "dotnet6",
 			Code = new FileArchive("../src/ENREclamos/output.zip"),
 			Handler = "ENREclamos::ENREclamos.Functions::Get",
 			Role = lambdaRole.Apply(x => x.Arn),
 			Environment = envHTMLTable,
-			Description = $"LAMBDA que envia un reclamo al ENRE para la cuenta {EnreConfig.Nombre}",
+			Description = $"LAMBDA que envia un reclamo al ENRE para la cuenta {enreConfig.Nombre}",
 			Timeout = 20
 		});
 		LambdaReclamo = lambdaReclamo.Arn;
@@ -139,8 +137,8 @@ class ENREStack : Stack
 			},
 			ScheduleExpressionTimezone = "America/Buenos_Aires",
 			//StartDate = startDate,
-			Description = $"Scheduled Job para mandar un reclamo al ENRE cada 4 horas para el medidor {EnreConfig.Nombre}",
-			State = EnreConfig.ScheduleStatus
+			Description = $"Scheduled Job para mandar un reclamo al ENRE cada 4 horas para el medidor {enreConfig.Nombre}",
+			State = enreConfig.ScheduleStatus
 		});
 
 		Schedule = schedule.Arn;
@@ -160,20 +158,20 @@ class ENREStack : Stack
 		{
 			Variables = new InputMap<string>() {
 				{"TABLA_RECLAMOS", reclamosTable.Name},
-				{"CODIGO_VALIDACION", EnreConfig.CodigoValidacion},
+				{"CODIGO_VALIDACION", enreConfig.CodigoValidacion},
 				{"SCHEDULE_ARN", Schedule}
 			}
 		};
 		
 		var lambdaHttpFunction = new Function("ENREclamos-HTTPFunction", new FunctionArgs
 		{
-			Name = $"ENREclamos-{EnreConfig.Nombre}-HTTPFunction",
+			Name = $"ENREclamos-{enreConfig.Nombre}-HTTPFunction",
 			Runtime = "dotnet6",
 			Code = new FileArchive("../src/ENREclamos.LambdaHTTPFunction/output.zip"),
 			Handler = "ENREclamos.LambdaHTTPFunction",
 			Role = lambdaHttpFunctionRole.Apply(x => x.Arn),
 			Environment = envHTTPFunction,
-			Description = $"HTTP Function LAMBDA para ver la lista de reclamos y prender y apagar el schedule para la cuenta {EnreConfig.Nombre}",
+			Description = $"HTTP Function LAMBDA para ver la lista de reclamos y prender y apagar el schedule para la cuenta {enreConfig.Nombre}",
 			Timeout = 20,
 		});
 		
