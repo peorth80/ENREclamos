@@ -175,7 +175,7 @@ class ENREStack : Stack
 			Timeout = 20,
 		});
 		
-		var lambdaFunctionUrl = new FunctionUrl("testLatest", new()
+		var lambdaFunctionUrl = new FunctionUrl("ENREclamos-HTTPFunction-Url", new()
 		{
 			FunctionName = lambdaHttpFunction.Name,
 			AuthorizationType = "NONE",
