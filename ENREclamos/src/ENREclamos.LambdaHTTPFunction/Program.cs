@@ -30,7 +30,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", () => "ENREClamos 0.1.1");
+app.MapGet("/", () => "ENREClamos 0.1.2");
 
 app.MapGet("/start/{code:guid}", async (Guid code, IConfiguration configuration, ILogger<Program> logger) =>
 {

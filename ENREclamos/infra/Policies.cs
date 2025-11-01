@@ -108,7 +108,8 @@ public class Policies
 			{{
 				""Effect"": ""Allow"",
 				""Action"": [
-				""lambda:InvokeFunction""
+				""lambda:InvokeFunction"",
+				""lambda:InvokeFunctionUrl""
 				],
 				""Resource"": [
 				""arn:aws:lambda:{0}:{1}:function:{2}:*"",
