@@ -8,6 +8,7 @@ using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Moq.Protected;
 using Xunit;
@@ -16,7 +17,18 @@ namespace ENREclamos.Tests;
 
 public class FunctionTest
 {
-    private const string AWS_PROFILE = "mi-profile";
+    private static string AWS_PROFILE
+    {
+        get
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            return configuration["AWS:Profile"] ?? throw new InvalidOperationException("AWS:Profile not found in appSettings.json");
+        }
+    }
     private Mock<HttpMessageHandler> OK_Handler = new();
     private Mock<HttpMessageHandler> Fail_Handler = new();
 
@@ -26,8 +38,9 @@ public class FunctionTest
     
     public FunctionTest()
     {
-        _realS3Client = GetClient();
-        _realDynamodb = GetDynamoClient();
+        // Only initialize real clients when needed for integration tests
+        // _realS3Client = GetClient();
+        // _realDynamodb = GetDynamoClient();
         
         OK_Handler
             .Protected()
@@ -62,9 +75,9 @@ public class FunctionTest
 
     private static void SetEnvVariables()
     {
-        Environment.SetEnvironmentVariable("BUCKET_RECLAMOS", "bucket-reclamos-html");
-        Environment.SetEnvironmentVariable("TABLA_RECLAMOS", "tabla-dynamo-reclamo-enre");
-        Environment.SetEnvironmentVariable("DRY_RUN", "true");
+        Environment.SetEnvironmentVariable("BUCKET_RECLAMOS", "test-bucket-reclamos-html");
+        Environment.SetEnvironmentVariable("TABLA_RECLAMOS", "test-tabla-dynamo-reclamo-enre");
+        Environment.SetEnvironmentVariable("DRY_RUN", "false"); //Los HTTP Clients estan mockeados, no va a pegarle al site real 
         Environment.SetEnvironmentVariable("AWS_PROFILE", AWS_PROFILE);
         
 
@@ -104,10 +117,13 @@ public class FunctionTest
         var httpClientFactoryMock = new Mock<IHttpClientFactory>();
         httpClientFactoryMock.Setup(_ => _.CreateClient(It.IsAny<string>())).Returns(httpClient);
 
+        var mockS3Client = new Mock<IAmazonS3>();
+        var mockDynamoDb = new Mock<IAmazonDynamoDB>();
+
         var context = new TestLambdaContext();
         var functions = new Functions(httpClientFactoryMock.Object, 
-            _realS3Client, 
-            _realDynamodb);
+            mockS3Client.Object, 
+            mockDynamoDb.Object);
 
         var response = await functions.Get(context);
 
@@ -126,10 +142,13 @@ public class FunctionTest
         var httpClientFactoryMock = new Mock<IHttpClientFactory>();
         httpClientFactoryMock.Setup(_ => _.CreateClient(It.IsAny<string>())).Returns(httpClient);
 
+        var mockS3Client = new Mock<IAmazonS3>();
+        var mockDynamoDb = new Mock<IAmazonDynamoDB>();
+
         var context = new TestLambdaContext();
         var functions = new Functions(httpClientFactoryMock.Object, 
-            _realS3Client, 
-            _realDynamodb);
+            mockS3Client.Object, 
+            mockDynamoDb.Object);
 
         var response = await functions.Get(context);
 
@@ -144,11 +163,15 @@ public class FunctionTest
          
         Environment.SetEnvironmentVariable("DRY_RUN", "true");
         
+        // Initialize real clients for integration test
+        var realS3Client = GetClient();
+        var realDynamodb = GetDynamoClient();
+
         var httpClientFactory = new RealClientFactory();
         var context = new TestLambdaContext();
         var functions = new Functions(httpClientFactory, 
-            _realS3Client, 
-            _realDynamodb);
+            realS3Client, 
+            realDynamodb);
 
         var response = await functions.Get(context);
 

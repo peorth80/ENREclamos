@@ -30,7 +30,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", () => "ENREClamos 0.1.2");
+app.MapGet("/", () => "ENREClamos 0.1.3");
 
 app.MapGet("/start/{code:guid}", async (Guid code, IConfiguration configuration, ILogger<Program> logger) =>
 {
@@ -195,14 +195,14 @@ async Task<Status> ChangeStatus(ScheduleInformation scheduleInfo, bool enabled)
 
         if (enabled && schedule.State == ScheduleState.ENABLED)
         {
-            results.Message = "El schedule ya se encuentra habilitado";
+            results.Message = "El schedule ya estaba habilitado";
             results.Success = false;
             return results;
         }
         
         if (!enabled && schedule.State == ScheduleState.DISABLED)
         {
-            results.Message = "El schedule ya se encuentra deshabilitado";
+            results.Message = "El schedule ya estaba deshabilitado";
             results.Success = false;
             return results;
         }
