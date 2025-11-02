@@ -104,7 +104,7 @@ class ENREStack : Stack
 		var lambdaReclamo = new Function("ENREclamos", new FunctionArgs
 		{
 			Name = $"ENREclamos-{enreConfig.Nombre}",
-			Runtime = "dotnet6",
+			Runtime = "dotnet8",
 			Code = new FileArchive("../src/ENREclamos/output.zip"),
 			Handler = "ENREclamos::ENREclamos.Functions::Get",
 			Role = lambdaRole.Apply(x => x.Arn),
@@ -166,10 +166,10 @@ class ENREStack : Stack
 		var lambdaHttpFunction = new Function("ENREclamos-HTTPFunction", new FunctionArgs
 		{
 			Name = $"ENREclamos-{enreConfig.Nombre}-HTTPFunction",
-			Runtime = "dotnet6",
+			Runtime = "dotnet8",
 			Code = new FileArchive("../src/ENREclamos.LambdaHTTPFunction/output.zip"),
 			Handler = "ENREclamos.LambdaHTTPFunction",
-			Role = lambdaHttpFunctionRole.Apply(x => x.Arn),
+			Role = lambdaHttpFunctionRole.Apply(x => x.role.Arn),
 			Environment = envHTTPFunction,
 			Description = $"HTTP Function LAMBDA para ver la lista de reclamos y prender y apagar el schedule para la cuenta {enreConfig.Nombre}",
 			Timeout = 20,
@@ -237,7 +237,7 @@ class ENREStack : Stack
 	}
 	
 	
-	private static Role CreateLambdaHttpFunctionRolePolicies(string dynamodbTable, string scheduleArn, Output<string> scheduleRoleArn)
+	private static (Role role, RolePolicy[] policies) CreateLambdaHttpFunctionRolePolicies(string dynamodbTable, string scheduleArn, Output<string> scheduleRoleArn)
 	{
 		var lambdaRole = new Role("lambdaHTTPFunctionRole", new RoleArgs
 		{
@@ -249,7 +249,7 @@ class ENREStack : Stack
 			Role = lambdaRole.Id,
 			Policy = scheduleRoleArn.Apply(role => Policies.ReadPassRolePolicyForLambda(role)) 
 		});
-		
+
 		var logPolicy = new RolePolicy("lambdaHTTPFunctionPolicy", new RolePolicyArgs
 		{
 			Role = lambdaRole.Id,
@@ -261,13 +261,13 @@ class ENREStack : Stack
 			Role = lambdaRole.Id,
 			Policy = Policies.ReadPolicyForReclamosTable(dynamodbTable)
 		});
-		
-		var schedulePolicyRole = new RolePolicy("scheduleHTTPFunctionPolicy", new RolePolicyArgs
-        {
-        	Role = lambdaRole.Id,
-        	Policy = Policies.ReadPolicyForSchedulerUpdates(scheduleArn)
-        });
 
-		return lambdaRole;
+		var schedulePolicyRole = new RolePolicy("scheduleHTTPFunctionPolicy", new RolePolicyArgs
+		{
+			Role = lambdaRole.Id,
+			Policy = Policies.ReadPolicyForSchedulerUpdates(scheduleArn)
+		});
+
+		return (lambdaRole, new[] { iamRole, logPolicy, dynamodbPolicyRole, schedulePolicyRole });
 	}
 }
